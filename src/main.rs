@@ -3,15 +3,21 @@
 use futures_util::TryStreamExt;
 use hyper::service::{make_service_fn, service_fn};
 use hyper::{Body, Method, Request, Response, Server, StatusCode};
+//  use std::time::SystemTime;
+use chrono::Utc;
 
 /// This is our service handler. It receives a Request, routes on its
 /// path, and returns a Future of a Response.
 async fn echo(req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
+    let now = Utc::now();
+
     match (req.method(), req.uri().path()) {
         // Serve some instructions at /
         (&Method::GET, "/") => Ok(Response::new(Body::from(
             "Try POSTing data to /echo such as: `curl localhost:3000/echo -XPOST -d 'hello world'`",
         ))),
+
+        (&Method::GET, "/time") => Ok(Response::new(Body::from(now.to_string()))),
 
         // Simply echo the body back to the client.
         (&Method::POST, "/echo") => Ok(Response::new(req.into_body())),
