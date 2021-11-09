@@ -1,10 +1,15 @@
 #![deny(warnings)]
+extern crate pretty_env_logger;
+
+// run with: RUST_LOG=trace cargo run
 
 use futures_util::TryStreamExt;
 use hyper::service::{make_service_fn, service_fn};
 use hyper::{Body, Method, Request, Response, Server, StatusCode};
 //  use std::time::SystemTime;
 use chrono::Utc;
+#[macro_use]
+extern crate log;
 
 /// This is our service handler. It receives a Request, routes on its
 /// path, and returns a Future of a Response.
@@ -17,7 +22,10 @@ async fn echo(req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
             "Try POSTing data to /echo such as: `curl localhost:3000/echo -XPOST -d 'hello world'`",
         ))),
 
-        (&Method::GET, "/time") => Ok(Response::new(Body::from(now.to_string()))),
+        (&Method::GET, "/time") => {
+            info!("Time request");
+            Ok(Response::new(Body::from(now.to_string())))
+        }
 
         // Simply echo the body back to the client.
         (&Method::POST, "/echo") => Ok(Response::new(req.into_body())),
@@ -57,6 +65,7 @@ async fn echo(req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    pretty_env_logger::init_timed();
     let addr = ([127, 0, 0, 1], 3000).into();
 
     let service = make_service_fn(|_| async { Ok::<_, hyper::Error>(service_fn(echo)) });
